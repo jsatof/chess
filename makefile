@@ -1,8 +1,8 @@
 CC = gcc 
 FLAGS = -g 
 
-INCS = -I/usr/include/SDL2
-LIBS = -L/usr/lib -lSDL2
+INCS = -I$(SDL_INC_PATH)
+LIBS = -L$(SDL_LIB_PATH) -lSDL2
 
 EXEC = run
 SRCS = $(shell find *.c)
