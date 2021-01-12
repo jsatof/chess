@@ -2,7 +2,7 @@ CC = gcc
 FLAGS = -g 
 
 INCS = -I$(SDL_INC_PATH)
-LIBS = -L$(SDL_LIB_PATH) -lSDL2
+LIBS = -L$(SDL_LIB_PATH) -lSDL2 -lSDL2_ttf
 
 EXEC = run
 SRCS = $(shell find *.c)
