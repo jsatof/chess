@@ -3,3 +3,6 @@
 
 # name of executable
 run
+
+# environment vars
+env.sh
