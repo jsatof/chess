@@ -1,4 +1,13 @@
+#ifdef _WIN32
+	#include <direct.h>
+	#define getcwd _getcwd
+#else
+	#include <unistd.h>
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -14,8 +23,14 @@ int main() {
 		return 1;
 	}
 
-	char *font_path = "/home/jsferrarelli/Downloads/fonts/DroidSansMono.ttf";
-
+	char *current_path = getcwd(NULL, 0);
+	char font_path[256];
+	strcpy(font_path, current_path);
+	free(current_path);
+	
+	strcat(font_path, "/Hack-Regular.ttf");
+	
+ 
 	TTF_Font *font_type = TTF_OpenFont(font_path, 24);
 	if(!font_type) {
 		printf("error: TTF_OpenFont failure\n%s\n", TTF_GetError());
@@ -84,6 +99,7 @@ int main() {
 		SDL_RenderPresent(renderer);
 		SDL_Delay(1000/30);
 	}
+
 
 	SDL_DestroyTexture(message_texture);
 
