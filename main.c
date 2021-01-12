@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 int main() {
-	printf("hello h\n");
+	int num = 14;
+	printf("hello %d\n", num);
 	return 0;
 }
