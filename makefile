@@ -1,4 +1,4 @@
-CC = gcc 
+CC = gcc
 FLAGS = -g 
 
 INCS = -I$(SDL_INC_PATH)
@@ -10,8 +10,6 @@ OBJS = $(SRCS:%.c=%.o)
 
 all: $(EXEC)
 
-
-
 # link phase
 $(EXEC): $(OBJS)
 	$(CC) $(FLAGS) $(OBJS) -o $(EXEC) $(LIBS)
@@ -22,4 +20,3 @@ $(OBJS): $(SRCS)
 
 clean:
 	rm -rf $(EXEC) $(OBJS)
-
