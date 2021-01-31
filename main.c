@@ -23,6 +23,9 @@ int main() {
 		return 1;
 	}
 
+	const int window_width = 900;
+	const int window_height = 600;
+
 	char *current_path = getcwd(NULL, 0);
 	char font_path[256];
 	strcpy(font_path, current_path);
@@ -39,10 +42,14 @@ int main() {
 		return 1;
 	}
 
-	char *message = "hello";
+	char *title = "Chess";
+	char *play = "Play Game";
+	char *exit = "Exit";
 	SDL_Color font_color = { 255, 255, 255 };
-	SDL_Surface *message_surface = TTF_RenderText_Solid(font_type, message, font_color);
-	if(message_surface == NULL) {
+	SDL_Surface *title_surface = TTF_RenderText_Solid(font_type, title, font_color);
+	SDL_Surface *play_surface = TTF_RenderText_Solid(font_type, play, font_color);
+	SDL_Surface *exit_surface = TTF_RenderText_Solid(font_type, exit, font_color);
+	if(title_surface == NULL || play_surface == NULL || exit_surface == NULL) {
 		printf("error: TTF_RenderText_Solid failure\n%s\n", SDL_GetError());
 		TTF_CloseFont(font_type);
 		TTF_Quit();
@@ -55,8 +62,6 @@ int main() {
 	SDL_Surface *surface;
 	SDL_Texture *texture;
 	SDL_Event event;
-	const int window_width = 900;
-	const int window_height = 600;
 
 	Uint32 window_flags = 0;
 
@@ -68,10 +73,14 @@ int main() {
 		return 1;
 	}
 
-	SDL_Texture *message_texture = SDL_CreateTextureFromSurface(renderer, message_surface);
-	if(message_texture == NULL) {
+	SDL_Texture *title_texture = SDL_CreateTextureFromSurface(renderer, title_surface);
+	SDL_Texture *play_texture = SDL_CreateTextureFromSurface(renderer, play_surface);
+	SDL_Texture *exit_texture = SDL_CreateTextureFromSurface(renderer, exit_surface);
+	if(title_texture == NULL || play_texture == NULL || exit_texture == NULL) {
 		printf("error: SDL_CreateTextureFromSurface failure\n%s\n", SDL_GetError());
-		SDL_FreeSurface(message_surface);
+		SDL_FreeSurface(title_surface);
+		SDL_FreeSurface(play_surface);
+		SDL_FreeSurface(exit_surface);
 		SDL_DestroyWindow(window);
 		SDL_DestroyRenderer(renderer);
 		TTF_CloseFont(font_type);
@@ -80,8 +89,14 @@ int main() {
 		return 1;
 	}
 
-	SDL_FreeSurface(message_surface);
-	SDL_Rect message_rect = { .x = 0, .y = 0, .w = 100, .h = 32 };
+	SDL_FreeSurface(title_surface);
+	SDL_Rect title_rect = { .x = window_width/2-150, .y = window_height/2-180, .w = 300, .h = 96 };
+
+	SDL_FreeSurface(play_surface);
+	SDL_Rect play_rect = { .x = window_width/2-100, .y = window_height/2-40, .w = 200, .h = 32 };
+
+	SDL_FreeSurface(exit_surface);
+	SDL_Rect exit_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 };
 
 	int close = 0;
 	while(!close) {
@@ -93,7 +108,9 @@ int main() {
 		SDL_RenderClear(renderer);
 		
 		// Draw items here
-		SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
+		SDL_RenderCopy(renderer, title_texture, NULL, &title_rect);
+		SDL_RenderCopy(renderer, play_texture, NULL, &play_rect);
+		SDL_RenderCopy(renderer, exit_texture, NULL, &exit_rect);
 		
 
 		SDL_RenderPresent(renderer);
@@ -101,7 +118,9 @@ int main() {
 	}
 
 
-	SDL_DestroyTexture(message_texture);
+	SDL_DestroyTexture(title_texture);
+	SDL_DestroyTexture(play_texture);
+	SDL_DestroyTexture(exit_texture);
 
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
