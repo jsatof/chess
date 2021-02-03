@@ -9,7 +9,45 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL.h>
+#include <stdbool.h>
 #include <SDL_ttf.h>
+
+//Creating a button
+typedef struct {
+    SDL_Rect draw_rect;    // dimensions of button
+		struct {
+        	Uint8 r, g, b, a;
+    	} colour;
+
+    bool pressed;
+} button_t;
+
+static void button_process_event(button_t *btn, const SDL_Event *ev) {
+// react on mouse click within button rectangle by setting 'pressed'
+	if(ev->type == SDL_MOUSEBUTTONDOWN) {
+		if(ev->button.button == SDL_BUTTON_LEFT &&
+    		ev->button.x >= btn->draw_rect.x &&
+        	ev->button.x <= (btn->draw_rect.x + btn->draw_rect.w) &&
+	        ev->button.y >= btn->draw_rect.y &&
+	        ev->button.y <= (btn->draw_rect.y + btn->draw_rect.h)) {
+    		btn->pressed = true;
+    	}
+    }
+}
+
+static bool button(SDL_Renderer *r, button_t *btn) {
+// draw button
+	SDL_SetRenderDrawColor(r, btn->colour.r, btn->colour.g, btn->colour.b, btn->colour.a);
+	SDL_RenderFillRect(r, &btn->draw_rect);
+
+	// if button press detected - reset it so it wouldn't trigger twice
+	if(btn->pressed) {
+	    btn->pressed = false;
+	    return true;
+	}
+	return false;
+}
+
 
 int main() {
 	if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
@@ -25,6 +63,17 @@ int main() {
 
 	const int window_width = 900;
 	const int window_height = 600;
+
+	// button state - colour and rectangle
+    button_t start_button = {
+        .colour = { .r = 0, .g = 255, .b = 255, .a = 255, },
+        .draw_rect = { .x = 100, .y = 100, .w = 10, .h = 10 },
+    };
+
+	enum {
+        STATE_IN_MENU,
+        STATE_IN_GAME,
+    } state = 0;
 
 	char *current_path = getcwd(NULL, 0);
 	char font_path[256];
@@ -99,8 +148,20 @@ int main() {
 	SDL_Rect exit_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 };
 
 	int close = 0;
-	while(!close) {
+	while(!close) 
+	{
 		SDL_PollEvent(&event);
+		
+		button_process_event(&start_button, &event);
+		
+		if(state == STATE_IN_MENU) {
+            if(button(renderer, &start_button)) {
+                state = STATE_IN_GAME;   // state change - button will not be drawn anymore
+            }
+        } else if(state == STATE_IN_GAME) {
+            /* your game logic */
+        }
+		
 		if(event.type == SDL_QUIT) {
 			close = 1;
 		}
