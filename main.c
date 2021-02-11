@@ -12,49 +12,47 @@
 #include <stdbool.h>
 #include <SDL_ttf.h>
 
-//Creating a button
 typedef struct {
     SDL_Rect draw_rect;    // dimensions of button
-		struct {
-        	Uint8 r, g, b, a;
-    	} colour;
+    struct {
+        Uint8 r, g, b, a;
+    } colour;
 
     bool pressed;
 } button_t;
 
 static void button_process_event(button_t *btn, const SDL_Event *ev) {
-// react on mouse click within button rectangle by setting 'pressed'
-	if(ev->type == SDL_MOUSEBUTTONDOWN) {
-		if(ev->button.button == SDL_BUTTON_LEFT &&
-    		ev->button.x >= btn->draw_rect.x &&
-        	ev->button.x <= (btn->draw_rect.x + btn->draw_rect.w) &&
-	        ev->button.y >= btn->draw_rect.y &&
-	        ev->button.y <= (btn->draw_rect.y + btn->draw_rect.h)) {
-    		btn->pressed = true;
-    	}
+    // react on mouse click within button rectangle by setting 'pressed'
+    if(ev->type == SDL_MOUSEBUTTONDOWN) {
+        if(ev->button.button == SDL_BUTTON_LEFT &&
+                ev->button.x >= btn->draw_rect.x &&
+                ev->button.x <= (btn->draw_rect.x + btn->draw_rect.w) &&
+                ev->button.y >= btn->draw_rect.y &&
+                ev->button.y <= (btn->draw_rect.y + btn->draw_rect.h)) {
+            btn->pressed = true;
+        }
     }
 }
 
-static bool button(SDL_Renderer *r, button_t *btn) {
-// draw button
-	SDL_SetRenderDrawColor(r, btn->colour.r, btn->colour.g, btn->colour.b, btn->colour.a);
-	SDL_RenderFillRect(r, &btn->draw_rect);
+static bool button(SDL_Renderer *renderer, button_t *btn) {
+    // draw button
+    SDL_SetRenderDrawColor(renderer, btn->colour.r, btn->colour.g, btn->colour.b, btn->colour.a);
+    SDL_RenderFillRect(renderer, &btn->draw_rect);
 
-	// if button press detected - reset it so it wouldn't trigger twice
-	if(btn->pressed) {
-	    btn->pressed = false;
-	    return true;
-	}
-	return false;
+    // if button press detected - reset it so it wouldn't trigger twice
+    if(btn->pressed) {
+        btn->pressed = false;
+        return true;
+    }
+    return false;
 }
-
 
 int main() {
 	if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
 		printf("error: SDL_Init failure\n%s\n", SDL_GetError());
 		return 1;
 	}
-	
+
 	if(TTF_Init() == -1) {
 		printf("error: TTF_Init failure\n%s\n", TTF_GetError());
 		SDL_Quit();
@@ -66,14 +64,9 @@ int main() {
 
 	// button state - colour and rectangle
     button_t start_button = {
-        .colour = { .r = 0, .g = 255, .b = 255, .a = 255, },
-        .draw_rect = { .x = 100, .y = 100, .w = 10, .h = 10 },
+        .colour = { .r = 255, .g = 0, .b = 0, .a = 0, },
+        .draw_rect = { .x = 128, .y = 128, .w = 128, .h = 128 },
     };
-
-	enum {
-        STATE_IN_MENU,
-        STATE_IN_GAME,
-    } state = 0;
 
 	char *current_path = getcwd(NULL, 0);
 	char font_path[256];
@@ -148,35 +141,48 @@ int main() {
 	SDL_Rect exit_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 };
 
 	int close = 0;
+
+	enum {
+        STATE_IN_MENU,
+        STATE_IN_GAME,
+    } state = 0;
+
+	//RUNS WHEN WINDOW IS OPENED
 	while(!close) 
 	{
-		SDL_PollEvent(&event);
-		
-		button_process_event(&start_button, &event);
+		while(SDL_PollEvent(&event)) {
+            // quit on close, window close, or 'escape' key hit
+            if(event.type == SDL_QUIT ||
+                    (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) ||
+                    (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
+                close = 1;
+            }
+
+            // pass event to button
+            button_process_event(&start_button, &event);
+        }
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
 		
 		if(state == STATE_IN_MENU) {
             if(button(renderer, &start_button)) {
+                printf("start button pressed\n");
                 state = STATE_IN_GAME;   // state change - button will not be drawn anymore
             }
         } else if(state == STATE_IN_GAME) {
             /* your game logic */
         }
 		
-		if(event.type == SDL_QUIT) {
-			close = 1;
-		}
-
-		SDL_RenderClear(renderer);
-		
 		// Draw items here
 		SDL_RenderCopy(renderer, title_texture, NULL, &title_rect);
 		SDL_RenderCopy(renderer, play_texture, NULL, &play_rect);
 		SDL_RenderCopy(renderer, exit_texture, NULL, &exit_rect);
 		
-
 		SDL_RenderPresent(renderer);
 		SDL_Delay(1000/30);
 	}
+
 
 
 	SDL_DestroyTexture(title_texture);
