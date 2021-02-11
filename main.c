@@ -64,8 +64,13 @@ int main() {
 
 	// button state - colour and rectangle
     button_t start_button = {
-        .colour = { .r = 255, .g = 0, .b = 0, .a = 0, },
-        .draw_rect = { .x = 128, .y = 128, .w = 128, .h = 128 },
+        .colour = { .r = 0, .g = 0, .b = 0, .a = 0, },
+        .draw_rect = { .x = window_width/2-100, .y = window_height/2-40, .w = 200, .h = 32 },
+    };
+
+	button_t exit_button = {
+        .colour = { .r = 0, .g = 0, .b = 0, .a = 0, },
+        .draw_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 },
     };
 
 	char *current_path = getcwd(NULL, 0);
@@ -87,11 +92,18 @@ int main() {
 	char *title = "Chess";
 	char *play = "Play Game";
 	char *exit = "Exit";
+	char *decision = "Start with which color?";
+	char *white = "White";
+	char *black = "Black";
 	SDL_Color font_color = { 255, 255, 255 };
 	SDL_Surface *title_surface = TTF_RenderText_Solid(font_type, title, font_color);
 	SDL_Surface *play_surface = TTF_RenderText_Solid(font_type, play, font_color);
 	SDL_Surface *exit_surface = TTF_RenderText_Solid(font_type, exit, font_color);
-	if(title_surface == NULL || play_surface == NULL || exit_surface == NULL) {
+	SDL_Surface *decision_surface = TTF_RenderText_Solid(font_type, decision, font_color);
+	SDL_Surface *white_surface = TTF_RenderText_Solid(font_type, white, font_color);
+	SDL_Surface *black_surface = TTF_RenderText_Solid(font_type, black, font_color);
+	if(title_surface == NULL || play_surface == NULL || exit_surface == NULL 
+		|| decision_surface == NULL || white_surface == NULL || black_surface == NULL) {
 		printf("error: TTF_RenderText_Solid failure\n%s\n", SDL_GetError());
 		TTF_CloseFont(font_type);
 		TTF_Quit();
@@ -118,11 +130,19 @@ int main() {
 	SDL_Texture *title_texture = SDL_CreateTextureFromSurface(renderer, title_surface);
 	SDL_Texture *play_texture = SDL_CreateTextureFromSurface(renderer, play_surface);
 	SDL_Texture *exit_texture = SDL_CreateTextureFromSurface(renderer, exit_surface);
+	SDL_Texture *decision_texture = SDL_CreateTextureFromSurface(renderer, decision_surface);
+	SDL_Texture *white_texture = SDL_CreateTextureFromSurface(renderer, white_surface);
+	SDL_Texture *black_texture = SDL_CreateTextureFromSurface(renderer, black_surface);
 	if(title_texture == NULL || play_texture == NULL || exit_texture == NULL) {
 		printf("error: SDL_CreateTextureFromSurface failure\n%s\n", SDL_GetError());
+
 		SDL_FreeSurface(title_surface);
 		SDL_FreeSurface(play_surface);
 		SDL_FreeSurface(exit_surface);
+		SDL_FreeSurface(decision_surface);
+		SDL_FreeSurface(white_surface);
+		SDL_FreeSurface(black_surface);
+
 		SDL_DestroyWindow(window);
 		SDL_DestroyRenderer(renderer);
 		TTF_CloseFont(font_type);
@@ -130,7 +150,7 @@ int main() {
 		SDL_Quit();
 		return 1;
 	}
-
+	//TEXT SURFACES
 	SDL_FreeSurface(title_surface);
 	SDL_Rect title_rect = { .x = window_width/2-150, .y = window_height/2-180, .w = 300, .h = 96 };
 
@@ -139,6 +159,15 @@ int main() {
 
 	SDL_FreeSurface(exit_surface);
 	SDL_Rect exit_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 };
+
+	SDL_FreeSurface(decision_surface);
+	SDL_Rect decision_rect = { .x = window_width/2-350, .y = window_height/2-100, .w = 700, .h = 50 };
+
+	SDL_FreeSurface(white_surface);
+	SDL_Rect white_rect = { .x = window_width/2-240, .y = window_height/2, .w = 120, .h = 40 };
+
+	SDL_FreeSurface(black_surface);
+	SDL_Rect black_rect = { .x = window_width/2+120, .y = window_height/2, .w = 120, .h = 40 };
 
 	int close = 0;
 
@@ -160,6 +189,7 @@ int main() {
 
             // pass event to button
             button_process_event(&start_button, &event);
+			button_process_event(&exit_button, &event);
         }
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -170,8 +200,21 @@ int main() {
                 printf("start button pressed\n");
                 state = STATE_IN_GAME;   // state change - button will not be drawn anymore
             }
+			if(button(renderer, &exit_button)) {
+				printf("exit button pressed\n");
+                close = 1; // quits game
+            }
         } else if(state == STATE_IN_GAME) {
             /* your game logic */
+			//removes text
+			SDL_DestroyTexture(title_texture);
+			SDL_DestroyTexture(play_texture);
+			SDL_DestroyTexture(exit_texture);
+
+			//adds new text
+			SDL_RenderCopy(renderer, decision_texture, NULL, &decision_rect);
+			SDL_RenderCopy(renderer, white_texture, NULL, &white_rect);
+			SDL_RenderCopy(renderer, black_texture, NULL, &black_rect);
         }
 		
 		// Draw items here
@@ -182,8 +225,6 @@ int main() {
 		SDL_RenderPresent(renderer);
 		SDL_Delay(1000/30);
 	}
-
-
 
 	SDL_DestroyTexture(title_texture);
 	SDL_DestroyTexture(play_texture);
