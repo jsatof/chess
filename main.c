@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <SDL_ttf.h>
 
-typedef struct {
+typedef struct button_t {
     SDL_Rect draw_rect;    // dimensions of button
     struct {
         Uint8 r, g, b, a;
@@ -21,31 +21,10 @@ typedef struct {
     bool pressed;
 } button_t;
 
-static void button_process_event(button_t *btn, const SDL_Event *ev) {
-    // react on mouse click within button rectangle by setting 'pressed'
-    if(ev->type == SDL_MOUSEBUTTONDOWN) {
-        if(ev->button.button == SDL_BUTTON_LEFT &&
-                ev->button.x >= btn->draw_rect.x &&
-                ev->button.x <= (btn->draw_rect.x + btn->draw_rect.w) &&
-                ev->button.y >= btn->draw_rect.y &&
-                ev->button.y <= (btn->draw_rect.y + btn->draw_rect.h)) {
-            btn->pressed = true;
-        }
-    }
-}
 
-static bool button(SDL_Renderer *renderer, button_t *btn) {
-    // draw button
-    SDL_SetRenderDrawColor(renderer, btn->colour.r, btn->colour.g, btn->colour.b, btn->colour.a);
-    SDL_RenderFillRect(renderer, &btn->draw_rect);
-
-    // if button press detected - reset it so it wouldn't trigger twice
-    if(btn->pressed) {
-        btn->pressed = false;
-        return true;
-    }
-    return false;
-}
+static void button_process_event(button_t *btn, const SDL_Event *ev);
+static bool button(SDL_Renderer *renderer, button_t *btn);
+int check_quit_event(SDL_Event *e);
 
 int main() {
 	if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
@@ -101,7 +80,7 @@ int main() {
 
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	SDL_Surface *surface;
+	SDL_Surface *screen;
 	SDL_Texture *texture;
 	SDL_Event event;
 
@@ -140,7 +119,7 @@ int main() {
 	SDL_FreeSurface(exit_surface);
 	SDL_Rect exit_rect = { .x = window_width/2-40, .y = window_height/2+20, .w = 80, .h = 32 };
 
-	int close = 0;
+	int running = 1;
 
 	enum {
         STATE_IN_MENU,
@@ -148,19 +127,9 @@ int main() {
     } state = 0;
 
 	//RUNS WHEN WINDOW IS OPENED
-	while(!close) 
+	while(running) 
 	{
-		while(SDL_PollEvent(&event)) {
-            // quit on close, window close, or 'escape' key hit
-            if(event.type == SDL_QUIT ||
-                    (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) ||
-                    (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-                close = 1;
-            }
-
-            // pass event to button
-            button_process_event(&start_button, &event);
-        }
+		running = check_quit_event(&event);
 
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -195,4 +164,47 @@ int main() {
 	TTF_Quit();
 	SDL_Quit();
 	return 0;
+}
+
+static void button_process_event(button_t *btn, const SDL_Event *ev) {
+    // react on mouse click within button rectangle by setting 'pressed'
+    if(ev->type == SDL_MOUSEBUTTONDOWN) {
+        if(ev->button.button == SDL_BUTTON_LEFT &&
+                ev->button.x >= btn->draw_rect.x &&
+                ev->button.x <= (btn->draw_rect.x + btn->draw_rect.w) &&
+                ev->button.y >= btn->draw_rect.y &&
+                ev->button.y <= (btn->draw_rect.y + btn->draw_rect.h)) {
+            btn->pressed = true;
+        }
+    }
+}
+
+static bool button(SDL_Renderer *renderer, button_t *btn) {
+    // draw button
+    SDL_SetRenderDrawColor(renderer, btn->colour.r, btn->colour.g, btn->colour.b, btn->colour.a);
+    SDL_RenderFillRect(renderer, &btn->draw_rect);
+
+    // if button press detected - reset it so it wouldn't trigger twice
+    if(btn->pressed) {
+        btn->pressed = false;
+        return true;
+    }
+    return false;
+}
+
+int check_quit_event(SDL_Event *e) {
+    // quit on close, window close, or 'escape' key hit
+	int running = 1;
+	
+	while(SDL_PollEvent(e)) {
+		if(e->type == SDL_QUIT ||
+				(e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_CLOSE) ||
+				(e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE)) {
+				
+			running = 0;
+			return running;
+		}
+	}
+
+	return running;
 }
