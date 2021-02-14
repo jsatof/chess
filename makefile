@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -std=c11 
+FLAGS = -std=c11 -Wall -Wextra
 
 INCS = -I$(SDL_INC_PATH)
 LIBS = -L$(SDL_LIB_PATH) -lSDL2 -lSDL2_ttf
